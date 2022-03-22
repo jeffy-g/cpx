@@ -1,0 +1,23 @@
+{
+    "compilerOptions": {
+        "skipDefaultLibCheck": true,
+        "skipLibCheck": true,
+        "allowJs": true,
+        "checkJs": true,
+        "strict": true,
+        "removeComments": false,
+        "moduleResolution": "node",
+        "target": "esnext",
+        "module": "commonjs",
+        "sourceMap": false,
+        "baseUrl": "./",
+        "outDir": "./build/",
+        "diagnostics": true,
+        "declaration": true
+    },
+    "include": [
+        "./bin/**/*",
+        "./lib/**/*",
+        "./test/**/*.js"
+    ]
+}

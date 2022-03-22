@@ -1,20 +1,27 @@
+"use strict";
 /**
  * @author Toru Nagashima
  * @copyright 2016 Toru Nagashima. All rights reserved.
  * See LICENSE file in root directory for full license.
  */
-"use strict"
-
+/*!
+ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  Copyright (C) 2022 jeffy-g <hirotom1107@gmail.com>
+  Released under the MIT license
+  https://opensource.org/licenses/mit-license.php
+ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+*/
 //------------------------------------------------------------------------------
 // Exports
 //------------------------------------------------------------------------------
-
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.help = void 0;
 /**
  * Prints the help text.
  *
  * @returns {void}
  */
-module.exports = function help() {
+function help() {
     console.log(`
 Usage: cpx <source> <dest> [options]
 
@@ -52,5 +59,6 @@ Examples:
 
 See Also:
     https://github.com/mysticatea/cpx
-`)
+`);
 }
+exports.help = help;

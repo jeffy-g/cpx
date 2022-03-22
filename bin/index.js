@@ -1,23 +1,28 @@
 #!/usr/bin/env node
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 /**
  * @author Toru Nagashima
  * @copyright 2016 Toru Nagashima. All rights reserved.
  * See LICENSE file in root directory for full license.
  */
-"use strict"
-
+/*!
+ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  Copyright (C) 2022 jeffy-g <hirotom1107@gmail.com>
+  Released under the MIT license
+  https://opensource.org/licenses/mit-license.php
+ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+*/
 //------------------------------------------------------------------------------
 // Requirements
 //------------------------------------------------------------------------------
-
-const subarg = require("subarg")
-
+// @ts-ignore 
+const subarg = require("subarg");
 //------------------------------------------------------------------------------
 // Main
 //------------------------------------------------------------------------------
-
 // Parse arguments.
-const unknowns = new Set()
+const unknowns = new Set();
 const args = subarg(process.argv.slice(2), {
     alias: {
         c: "command",
@@ -47,27 +52,49 @@ const args = subarg(process.argv.slice(2), {
     default: { initial: true },
     unknown(arg) {
         if (arg[0] === "-") {
-            unknowns.add(arg)
+            unknowns.add(arg);
         }
-    },
-})
-const source = args._[0]
-const outDir = args._[1]
-
+        // DEVNOTE: 2022/03/15 - fix missed type
+        return true;
+    }
+});
+const source = args._[0];
+const outDir = args._[1];
+/**
+ * @typedef TCPZBinMod
+ * @prop {() => void} help
+ * @prop {() => void} version
+ * @prop {(input: string, output: string, args: TMinimistParsedArgs) => void} main
+ */
+/** @type {keyof TCPZBinMod} */
+// @ts-ignore 
+let modId = "";
 // Validate Options.
 if (unknowns.size > 0) {
-    console.error(`Unknown option(s): ${Array.from(unknowns).join(", ")}`)
-    process.exitCode = 1
+    console.error(`Unknown option(s): ${Array.from(unknowns).join(", ")}`);
+    process.exitCode = 1;
 }
-
 // Main.
 else if (args.help) {
-    require("./help")()
-} else if (args.version) {
-    require("./version")()
-} else if (source == null || outDir == null || args._.length > 2) {
-    require("./help")()
-    process.exitCode = 1
-} else {
-    require("./main")(source, outDir, args)
+    modId = "help";
+}
+else if (args.version) {
+    modId = "version";
+}
+else if (source == null || outDir == null || args._.length > 2) {
+    modId = "help";
+    process.exitCode = 1;
+}
+else {
+    modId = "main";
+}
+if (modId) {
+    /** @type {Promise<TCPZBinMod>} */
+    const module = Promise.resolve().then(() => require(`./${modId}`));
+    if (modId !== "main") {
+        module.then(mod => /** @type {TCPZBinMod["help" | "version"]} */ (mod[modId])());
+    }
+    else {
+        module.then(mod => mod[modId](source, outDir, args));
+    }
 }
