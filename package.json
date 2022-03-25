@@ -1,6 +1,6 @@
 {
   "name": "@jeffy-g/cpx",
-  "version": "1.6.0",
+  "version": "1.6.1",
   "description": "Copy file globs, watching for changes.",
   "engines": {
     "node": ">=12"
