@@ -30,6 +30,7 @@ const copy_file_1 = require("../lib/utils/copy-file");
 const normalize_options_1 = require("../lib/utils/normalize-options");
 const remove_file_sync_1 = require("../lib/utils/remove-file-sync");
 const watcher_1 = require("../lib/utils/watcher");
+const importSync = require("./webpack-import");
 //------------------------------------------------------------------------------
 // Helpers
 //------------------------------------------------------------------------------
@@ -87,18 +88,10 @@ function main(source, outDir, args) {
             return outer;
         };
     });
-    /**
-     * @typedef {import("stream").Transform} TStreamTransform
-     * @typedef {TMinimistParsedArgs & { _flags: Record<string, any> }} TTransformerParam1
-     * @typedef {(file: string, opt: TTransformerParam1) => TStreamTransform} TTransformer
-     * @typedef {(file: string, opts: Record<string, any>) => TStreamTransform} TTransformFactory
-     */
     // Resolve Transforms.
     /** @type {TTransformFactory[]} */
-    const transforms = []
-        .concat(args.transform)
-        .filter(Boolean)
-        .map((/** @type {TMinimistParsedArgs} */ arg) => {
+    const transforms = [].concat(args.transform).filter(Boolean)
+        .map((/** @type {TMinimistParsedArgs | string} */ arg) => {
         if (typeof arg === "string") {
             return { name: /** @type {string} */ (arg), argv: null };
         }
@@ -109,9 +102,9 @@ function main(source, outDir, args) {
         process.exit(1);
     })
         .map((/** @type {TArgEntry} */ item) => {
-        const createStream = ABS_OR_REL.test(item.name)
-            ? require((0, path_1.resolve)(item.name))
-            : require((0, resolve_1.sync)(item.name, { basedir: process.cwd() }));
+        const modId = ABS_OR_REL.test(item.name) ? (0, path_1.resolve)(item.name) : (0, resolve_1.sync)(item.name, { basedir: process.cwd() });
+        /** @type {TTransformer} */
+        const createStream = importSync(modId);
         return (file, opts) => createStream(file, Object.assign({ _flags: opts }, item.argv));
     });
     // Merge commands and transforms as same as order of process.argv.

@@ -1,10 +1,9 @@
 # cpx
 
-![npm](https://img.shields.io/npm/v/@jeffy-g/cpx?style=plastic)
+[![npm](https://img.shields.io/npm/v/@jeffy-g/cpx?style=plastic)](https://www.npmjs.com/package/@jeffy-g/cpx)
 [![Node.js CI](https://github.com/jeffy-g/cpx/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/jeffy-g/cpx/actions/workflows/tests.yml)
 
 > Migrate `mysticatea/cpx` to async/await
-
 
 Copy file globs, watching for changes.
 

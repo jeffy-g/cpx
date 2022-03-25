@@ -67,34 +67,30 @@ const outDir = args._[1];
  * @prop {(input: string, output: string, args: TMinimistParsedArgs) => void} main
  */
 /** @type {keyof TCPZBinMod} */
-// @ts-ignore 
+// @ts-ignore
 let modId = "";
 // Validate Options.
 if (unknowns.size > 0) {
     console.error(`Unknown option(s): ${Array.from(unknowns).join(", ")}`);
     process.exitCode = 1;
 }
-// Main.
+// Main
 else if (args.help) {
     modId = "help";
-}
-else if (args.version) {
+} else if (args.version) {
     modId = "version";
-}
-else if (source == null || outDir == null || args._.length > 2) {
+} else if (source == null || outDir == null || args._.length > 2) {
     modId = "help";
     process.exitCode = 1;
-}
-else {
+} else {
     modId = "main";
 }
 if (modId) {
     /** @type {Promise<TCPZBinMod>} */
     const module = Promise.resolve().then(() => require(`./${modId}`));
     if (modId !== "main") {
-        module.then(mod => /** @type {TCPZBinMod["help" | "version"]} */ (mod[modId])());
-    }
-    else {
-        module.then(mod => mod[modId](source, outDir, args));
+        module.then(mod => /** @type {TCPZBinMod["help" | "version"]} */(mod[modId])());
+    } else {
+        module.then(mod => mod.main(source, outDir, args));
     }
 }

@@ -3,6 +3,13 @@
  * @copyright 2016 Toru Nagashima. All rights reserved.
  * See LICENSE file in root directory for full license.
  */
+/*!
+ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  Copyright (C) 2022 jeffy-g <hirotom1107@gmail.com>
+  Released under the MIT license
+  https://opensource.org/licenses/mit-license.php
+ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+*/
 "use strict";
 //------------------------------------------------------------------------------
 // Requirements
@@ -16,13 +23,14 @@ const ensureDir = fs.ensureDir;
 const remove = fs.remove;
 const cpx = require("../lib");
 const util = require("./util/util");
+const isCommand = util.isCommand;
 const delay = util.delay;
 const setupTestDir = util.setupTestDir;
 const teardownTestDir = util.teardownTestDir;
 const verifyTestDir = util.verifyTestDir;
 const writeFile = util.writeFile;
 const removeFile = util.removeFile;
-const execCommand = util.execCommand;
+const execCpx = util.execCpx;
 /**
  * @typedef {import("child_process").ChildProcess} ChildProcess description
  */
@@ -43,17 +51,14 @@ describe("The watch method", () => {
             watcher.close();
             watcher = null;
         }
-        if (command) {
+        else if (command) {
             // @ts-ignore maybe not null
             command.stdin.write("KILL");
             await pEvent(command, "exit");
-            await teardownTestDir("test-ws");
             //eslint-disable-next-line require-atomic-updates
             command = null;
         }
-        else {
-            await teardownTestDir("test-ws");
-        }
+        await teardownTestDir("test-ws");
     });
     /**
      * Wait for ready.
@@ -61,13 +66,11 @@ describe("The watch method", () => {
      */
     const waitForReady = async () => {
         if (watcher) {
-            // @ts-ignore
             await pEvent(watcher, "watch-ready");
         }
         else if (command) {
             while (true) {
-                // @ts-ignore
-                const chunk = await pEvent(command.stdout, "data");
+                const chunk = await pEvent(/** @type {NonNullable<ChildProcess["stdout"]>} */ (command.stdout), "data");
                 if (chunk.indexOf("Be watching") >= 0) {
                     break;
                 }
@@ -81,17 +84,29 @@ describe("The watch method", () => {
      */
     const waitForCopy = async () => {
         if (watcher) {
-            // @ts-ignore
             await pEvent(watcher, "copy");
         }
         else if (command) {
+            // TODO: refine await statement instead of `pEvent`
+            /*
+            let c = 0;
             while (true) {
-                // @ts-ignore
-                const chunk = await pEvent(command.stdout, "data");
+                const chunk = await pEvent(/** @type {NonNullable<ChildProcess["stdout"]>} * /(command.stdout), "data");
+                c++;
+                console.log(`waitForCopy::command - data: [${chunk}] count: ${c}`);
+                if (chunk.indexOf("Copied:") >= 0) {
+                    // console.log(`waitForCopy::command - count: ${c}`);
+                    break;
+                }
+            }
+            /*/
+            while (true) {
+                const chunk = await pEvent(/** @type {NonNullable<ChildProcess["stdout"]>} */ (command.stdout), "data");
                 if (chunk.indexOf("Copied:") >= 0) {
                     break;
                 }
             }
+            //*/
         }
         await delay(TEST_WATCH_DELAY);
     };
@@ -101,13 +116,11 @@ describe("The watch method", () => {
      */
     const waitForRemove = async () => {
         if (watcher) {
-            // @ts-ignore
             await pEvent(watcher, "remove");
         }
         else if (command) {
             while (true) {
-                // @ts-ignore
-                const chunk = await pEvent(command.stdout, "data");
+                const chunk = await pEvent(/** @type {NonNullable<ChildProcess["stdout"]>} */ (command.stdout), "data");
                 if (chunk.indexOf("Removed:") >= 0) {
                     break;
                 }
@@ -116,20 +129,18 @@ describe("The watch method", () => {
         await delay(TEST_WATCH_DELAY);
     };
     //==========================================================================
-    describe("should copy specified files with globs at first:", () => {
-        beforeEach(() => setupTestDir({
-            "test-ws/untouchable.txt": "untouchable",
-            "test-ws/a/hello.txt": "Hello",
-            "test-ws/a/b/this-is.txt": "A pen",
-            "test-ws/a/b/that-is.txt": "A note",
-            "test-ws/a/b/no-copy.dat": "no-copy",
-        }));
-        /**
-         * Verify.
-         * @returns {Promise<any>} ok
-         */
-        function verifyFiles() {
-            return verifyTestDir({
+    /** @type {TCpxTestEntry[]} */
+    const testEntries = [{
+            // #1
+            testTitle: "should copy specified files with globs at first:",
+            setupData: {
+                "test-ws/untouchable.txt": "untouchable",
+                "test-ws/a/hello.txt": "Hello",
+                "test-ws/a/b/this-is.txt": "A pen",
+                "test-ws/a/b/that-is.txt": "A note",
+                "test-ws/a/b/no-copy.dat": "no-copy",
+            },
+            verifyData: {
                 "test-ws/untouchable.txt": "untouchable",
                 "test-ws/a/hello.txt": "Hello",
                 "test-ws/a/b/this-is.txt": "A pen",
@@ -140,99 +151,82 @@ describe("The watch method", () => {
                 "test-ws/b/b/this-is.txt": "A pen",
                 "test-ws/b/b/that-is.txt": "A note",
                 "test-ws/b/b/no-copy.dat": null,
-            });
-        }
-        it("lib version.", async () => {
-            watcher = cpx.watch("test-ws/a/**/*.txt", "test-ws/b");
-            await waitForReady();
-            await verifyFiles();
-        });
-        it("command version.", async () => {
-            command = execCommand('"test-ws/a/**/*.txt" test-ws/b --watch --verbose');
-            await waitForReady();
-            await verifyFiles();
-        });
-    });
-    describe("should copy files in symlink directory at first when `--dereference` option was given:", () => {
-        beforeEach(async () => {
-            await setupTestDir({
+            },
+            entries: [
+                {
+                    type: 2 /* LIB */,
+                    patternOrCmd: "test-ws/a/**/*.txt",
+                    dest: "test-ws/b"
+                }, {
+                    type: 1 /* CMD */,
+                    patternOrCmd: '"test-ws/a/**/*.txt" test-ws/b --watch --verbose'
+                }
+            ]
+        }, {
+            // #2
+            testTitle: "should copy files in symlink directory at first when `--dereference` option was given:",
+            setupData: {
                 "test-ws/src/a/hello.txt": "Symlinked",
                 "test-ws/a/hello.txt": "Hello",
-            });
-            await fs.symlink(path.resolve("test-ws/src"), path.resolve("test-ws/a/link"), "junction");
-        });
-        /**
-         * Verify.
-         * @returns {Promise<any>} ok
-         */
-        function verifyFiles() {
-            return verifyTestDir({
+            },
+            onBeforeEach: () => fs.symlink(path.resolve("test-ws/src"), path.resolve("test-ws/a/link"), "junction"),
+            verifyData: {
                 "test-ws/a/hello.txt": "Hello",
                 "test-ws/a/link/a/hello.txt": "Symlinked",
                 "test-ws/b/hello.txt": "Hello",
                 "test-ws/b/link/a/hello.txt": "Symlinked",
-            });
-        }
-        it("lib version.", async () => {
-            watcher = cpx.watch("test-ws/a/**/*.txt", "test-ws/b", {
-                dereference: true,
-            });
-            await waitForReady();
-            await verifyFiles();
-        });
-        it("command version.", async () => {
-            command = execCommand('"test-ws/a/**/*.txt" test-ws/b --watch --dereference --verbose');
-            await waitForReady();
-            await verifyFiles();
-        });
-    });
-    describe("should not copy files in symlink directory when `--dereference` option was not given:", () => {
-        beforeEach(async () => {
-            await setupTestDir({
+            },
+            entries: [
+                {
+                    type: 2 /* LIB */,
+                    patternOrCmd: "test-ws/a/**/*.txt",
+                    dest: "test-ws/b",
+                    opts: {
+                        dereference: true,
+                    }
+                }, {
+                    type: 1 /* CMD */,
+                    patternOrCmd: '"test-ws/a/**/*.txt" test-ws/b --watch --dereference --verbose'
+                }
+            ]
+        }, {
+            // #3
+            testTitle: "should not copy files in symlink directory when `--dereference` option was not given:",
+            setupData: {
                 "test-ws/src/a/hello.txt": "Symlinked",
                 "test-ws/a/hello.txt": "Hello",
-            });
-            await fs.symlink(path.resolve("test-ws/src"), path.resolve("test-ws/a/link"), "junction");
-        });
-        /**
-         * Verify.
-         * @returns {Promise<any>} ok
-         */
-        function verifyFiles() {
-            return verifyTestDir({
+            },
+            onBeforeEach: () => fs.symlink(path.resolve("test-ws/src"), path.resolve("test-ws/a/link"), "junction"),
+            verifyData: {
                 "test-ws/a/hello.txt": "Hello",
                 "test-ws/a/link/a/hello.txt": "Symlinked",
                 "test-ws/b/hello.txt": "Hello",
                 "test-ws/b/link/a/hello.txt": null,
-            });
-        }
-        it("lib version.", async () => {
-            watcher = cpx.watch("test-ws/a/**/*.txt", "test-ws/b", {
-                dereference: false,
-            });
-            await waitForReady();
-            await verifyFiles();
-        });
-        it("command version.", async () => {
-            command = execCommand('"test-ws/a/**/*.txt" test-ws/b --watch --verbose');
-            await waitForReady();
-            await verifyFiles();
-        });
-    });
-    describe("should copy specified files with globs at first even if the glob starts with `./`:", () => {
-        beforeEach(() => setupTestDir({
-            "test-ws/untouchable.txt": "untouchable",
-            "test-ws/a/hello.txt": "Hello",
-            "test-ws/a/b/this-is.txt": "A pen",
-            "test-ws/a/b/that-is.txt": "A note",
-            "test-ws/a/b/no-copy.dat": "no-copy",
-        }));
-        /**
-         * Verify.
-         * @returns {Promise<any>} ok
-         */
-        function verifyFiles() {
-            return verifyTestDir({
+            },
+            entries: [
+                {
+                    type: 2 /* LIB */,
+                    patternOrCmd: "test-ws/a/**/*.txt",
+                    dest: "test-ws/b",
+                    opts: {
+                        dereference: false,
+                    }
+                }, {
+                    type: 1 /* CMD */,
+                    patternOrCmd: '"test-ws/a/**/*.txt" test-ws/b --watch --verbose'
+                }
+            ]
+        }, {
+            // #4
+            testTitle: "should copy specified files with globs at first even if the glob starts with `./`:",
+            setupData: {
+                "test-ws/untouchable.txt": "untouchable",
+                "test-ws/a/hello.txt": "Hello",
+                "test-ws/a/b/this-is.txt": "A pen",
+                "test-ws/a/b/that-is.txt": "A note",
+                "test-ws/a/b/no-copy.dat": "no-copy",
+            },
+            verifyData: {
                 "test-ws/untouchable.txt": "untouchable",
                 "test-ws/a/hello.txt": "Hello",
                 "test-ws/a/b/this-is.txt": "A pen",
@@ -243,35 +237,30 @@ describe("The watch method", () => {
                 "test-ws/b/b/this-is.txt": "A pen",
                 "test-ws/b/b/that-is.txt": "A note",
                 "test-ws/b/b/no-copy.dat": null,
-            });
-        }
-        it("lib version.", async () => {
-            watcher = cpx.watch("./test-ws/a/**/*.txt", "test-ws/b");
-            await waitForReady();
-            await verifyFiles();
-        });
-        it("command version.", async () => {
-            command = execCommand('"./test-ws/a/**/*.txt" test-ws/b --watch --verbose');
-            await waitForReady();
-            await verifyFiles();
-        });
-    });
-    describe("should clean and copy specified file blobs at first when give clean option:", () => {
-        beforeEach(() => setupTestDir({
-            "test-ws/untouchable.txt": "untouchable",
-            "test-ws/a/hello.txt": "Hello",
-            "test-ws/a/b/this-is.txt": "A pen",
-            "test-ws/a/b/that-is.txt": "A note",
-            "test-ws/a/b/no-copy.dat": "no-copy",
-            "test-ws/b/b/remove.txt": "remove",
-            "test-ws/b/b/no-remove.dat": "no-remove",
-        }));
-        /**
-         * Verify.
-         * @returns {Promise<any>} ok
-         */
-        function verifyFiles() {
-            return verifyTestDir({
+            },
+            entries: [
+                {
+                    type: 2 /* LIB */,
+                    patternOrCmd: "./test-ws/a/**/*.txt",
+                    dest: "test-ws/b",
+                }, {
+                    type: 1 /* CMD */,
+                    patternOrCmd: '"./test-ws/a/**/*.txt" test-ws/b --watch --verbose'
+                }
+            ]
+        }, {
+            // #5
+            testTitle: "should clean and copy specified file blobs at first when give clean option:",
+            setupData: {
+                "test-ws/untouchable.txt": "untouchable",
+                "test-ws/a/hello.txt": "Hello",
+                "test-ws/a/b/this-is.txt": "A pen",
+                "test-ws/a/b/that-is.txt": "A note",
+                "test-ws/a/b/no-copy.dat": "no-copy",
+                "test-ws/b/b/remove.txt": "remove",
+                "test-ws/b/b/no-remove.dat": "no-remove",
+            },
+            verifyData: {
                 "test-ws/untouchable.txt": "untouchable",
                 "test-ws/a/hello.txt": "Hello",
                 "test-ws/a/b/this-is.txt": "A pen",
@@ -284,35 +273,31 @@ describe("The watch method", () => {
                 "test-ws/b/b/no-copy.dat": null,
                 "test-ws/b/b/remove.txt": null,
                 "test-ws/b/b/no-remove.dat": "no-remove",
-            });
-        }
-        it("lib version.", async () => {
-            watcher = cpx.watch("test-ws/a/**/*.txt", "test-ws/b", {
-                clean: true,
-            });
-            await waitForReady();
-            await verifyFiles();
-        });
-        it("command version.", async () => {
-            command = execCommand('"test-ws/a/**/*.txt" test-ws/b --clean --watch --verbose');
-            await waitForReady();
-            await verifyFiles();
-        });
-    });
-    describe("should not copy specified files with globs at first when `--no-initial` option was given:", () => {
-        beforeEach(() => setupTestDir({
-            "test-ws/untouchable.txt": "untouchable",
-            "test-ws/a/hello.txt": "Hello",
-            "test-ws/a/b/this-is.txt": "A pen",
-            "test-ws/a/b/that-is.txt": "A note",
-            "test-ws/a/b/no-copy.dat": "no-copy",
-        }));
-        /**
-         * Verify.
-         * @returns {Promise<any>} ok
-         */
-        function verifyFiles() {
-            return verifyTestDir({
+            },
+            entries: [
+                {
+                    type: 2 /* LIB */,
+                    patternOrCmd: "./test-ws/a/**/*.txt",
+                    dest: "test-ws/b",
+                    opts: {
+                        clean: true,
+                    }
+                }, {
+                    type: 1 /* CMD */,
+                    patternOrCmd: '"test-ws/a/**/*.txt" test-ws/b --clean --watch --verbose'
+                }
+            ]
+        }, {
+            // #6
+            testTitle: "should not copy specified files with globs at first when `--no-initial` option was given:",
+            setupData: {
+                "test-ws/untouchable.txt": "untouchable",
+                "test-ws/a/hello.txt": "Hello",
+                "test-ws/a/b/this-is.txt": "A pen",
+                "test-ws/a/b/that-is.txt": "A note",
+                "test-ws/a/b/no-copy.dat": "no-copy",
+            },
+            verifyData: {
                 "test-ws/untouchable.txt": "untouchable",
                 "test-ws/a/hello.txt": "Hello",
                 "test-ws/a/b/this-is.txt": "A pen",
@@ -323,22 +308,48 @@ describe("The watch method", () => {
                 "test-ws/b/b/this-is.txt": null,
                 "test-ws/b/b/that-is.txt": null,
                 "test-ws/b/b/no-copy.dat": null,
+            },
+            entries: [
+                {
+                    type: 2 /* LIB */,
+                    patternOrCmd: "test-ws/a/**/*.txt",
+                    dest: "test-ws/b",
+                    opts: {
+                        initialCopy: false,
+                    }
+                }, {
+                    type: 1 /* CMD */,
+                    patternOrCmd: '"test-ws/a/**/*.txt" test-ws/b --no-initial --watch --verbose'
+                }
+            ]
+        }];
+    for (const te of testEntries) {
+        describe(te.testTitle, () => {
+            beforeEach(async () => {
+                await setupTestDir(te.setupData);
+                if (typeof te.onBeforeEach === "function") {
+                    await te.onBeforeEach();
+                }
             });
-        }
-        it("lib version.", async () => {
-            watcher = cpx.watch("test-ws/a/**/*.txt", "test-ws/b", {
-                initialCopy: false,
-            });
-            await waitForReady();
-            await verifyFiles();
+            for (const e of te.entries) {
+                const iscmd = isCommand(e);
+                const text = (iscmd ? "command" : "lib") + " version.";
+                it(text, async () => {
+                    if (iscmd) {
+                        command = execCpx(e.patternOrCmd);
+                    }
+                    else {
+                        watcher = cpx.watch(e.patternOrCmd, 
+                        // @ts-ignore
+                        e.dest, e.opts);
+                    }
+                    await waitForReady();
+                    await verifyTestDir(te.verifyData);
+                });
+            }
         });
-        it("command version.", async () => {
-            command = execCommand('"test-ws/a/**/*.txt" test-ws/b --no-initial --watch --verbose');
-            await waitForReady();
-            await verifyFiles();
-        });
-    });
-    /** @type {TWatchTestContext[]} */
+    }
+    /** @type {TWatchTestEntry[]} */
     const patterns = [
         {
             description: "should copy on file added:",
@@ -355,11 +366,13 @@ describe("The watch method", () => {
         {
             description: "should do nothing on file added if unmatch file globs:",
             initialFiles: { "test-ws/a/hello.txt": "Hello" },
-            action() {
-                return (async () => {
-                    await writeFile("test-ws/a/b/not-added.dat", "added");
-                    await writeFile("test-ws/a/a.txt", "a");
-                })();
+            async action() {
+                // return (async () => {
+                //     await writeFile("test-ws/a/b/not-added.dat", "added");
+                //     await writeFile("test-ws/a/a.txt", "a");
+                // })();
+                await writeFile("test-ws/a/b/not-added.dat", "added");
+                await writeFile("test-ws/a/a.txt", "a");
             },
             verify: {
                 "test-ws/b/hello.txt": "Hello",
@@ -382,11 +395,13 @@ describe("The watch method", () => {
                 "test-ws/a/hello.txt": "Hello",
                 "test-ws/a/hello.dat": "Hello",
             },
-            action() {
-                return (async () => {
-                    await writeFile("test-ws/a/hello.dat", "changed");
-                    await writeFile("test-ws/a/a.txt", "a");
-                })();
+            async action() {
+                // return (async () => {
+                //     await writeFile("test-ws/a/hello.dat", "changed");
+                //     await writeFile("test-ws/a/a.txt", "a");
+                // })();
+                await writeFile("test-ws/a/hello.dat", "changed");
+                await writeFile("test-ws/a/a.txt", "a");
             },
             verify: {
                 "test-ws/b/hello.txt": "Hello",
@@ -409,11 +424,13 @@ describe("The watch method", () => {
                 "test-ws/a/hello.txt": "Hello",
                 "test-ws/a/hello.dat": "Hello",
             },
-            action() {
-                return (async () => {
-                    await removeFile("test-ws/a/hello.dat");
-                    await writeFile("test-ws/a/hello.txt", "changed");
-                })();
+            async action() {
+                // return (async () => {
+                //     await removeFile("test-ws/a/hello.dat");
+                //     await writeFile("test-ws/a/hello.txt", "changed");
+                // })();
+                await removeFile("test-ws/a/hello.dat");
+                await writeFile("test-ws/a/hello.txt", "changed");
             },
             verify: {
                 "test-ws/b/hello.txt": "changed",
@@ -436,7 +453,7 @@ describe("The watch method", () => {
                 await verifyTestDir(pattern.verify);
             });
             it("command version.", async () => {
-                command = execCommand('"test-ws/a/**/*.txt" test-ws/b --watch --verbose');
+                command = execCpx('"test-ws/a/**/*.txt" test-ws/b --watch --verbose');
                 await waitForReady();
                 await pattern.action();
                 await pattern.wait();
@@ -472,7 +489,7 @@ describe("The watch method", () => {
             await verifyFiles();
         });
         it("command version.", async () => {
-            command = execCommand('"test-ws/a/**/*.txt" test-ws/b --watch --verbose');
+            command = execCpx('"test-ws/a/**/*.txt" test-ws/b --watch --verbose');
             await waitForReady();
             await removeFile("test-ws/a/hello.dat");
             await removeFile("test-ws/a/hello.txt");
@@ -508,7 +525,7 @@ describe("The watch method", () => {
             await verifyFiles();
         });
         it("command version.", async () => {
-            command = execCommand('"test-ws/a/**" test-ws/b --include-empty-dirs --watch --verbose');
+            command = execCpx('"test-ws/a/**" test-ws/b --include-empty-dirs --watch --verbose');
             await waitForReady();
             await ensureDir("test-ws/a/c");
             await waitForCopy();
@@ -542,7 +559,7 @@ describe("The watch method", () => {
             await verifyFiles();
         });
         it("command version.", async () => {
-            command = execCommand('"test-ws/a/**" test-ws/b --include-empty-dirs --watch --verbose');
+            command = execCpx('"test-ws/a/**" test-ws/b --include-empty-dirs --watch --verbose');
             await waitForReady();
             await remove("test-ws/a/c");
             await waitForRemove();
@@ -575,7 +592,7 @@ describe("The watch method", () => {
             await verifyFiles();
         });
         it("command version.", async () => {
-            command = execCommand('"test-ws/a/**" test-ws/b --no-initial --watch --verbose');
+            command = execCpx('"test-ws/a/**" test-ws/b --no-initial --watch --verbose');
             await waitForReady();
             await writeFile("test-ws/a/added.txt", "added");
             await waitForCopy();
@@ -607,7 +624,7 @@ describe("The watch method", () => {
             await verifyFiles();
         });
         it("command version.", async () => {
-            command = execCommand('"test-ws/a(paren)/**" test-ws/b --no-initial --watch --verbose');
+            command = execCpx('"test-ws/a(paren)/**" test-ws/b --no-initial --watch --verbose');
             await waitForReady();
             await writeFile("test-ws/a(paren)/hello.txt", "Hello 2");
             await waitForCopy();

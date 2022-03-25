@@ -1,5 +1,6 @@
 {
     "compilerOptions": {
+        "newLine": "lf",
         "skipDefaultLibCheck": true,
         "skipLibCheck": true,
         "allowJs": true,

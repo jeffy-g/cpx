@@ -19,7 +19,13 @@ declare module "subarg" {
  * #### module definition of "duplexer"
  */
 declare module "duplexer" {
-    import Stream, { Readable, Writable } from "stream";
-    function duplexer(output: Writable, input: Readable): Stream;
+    import * as stream from "stream";
+    // import Stream, { Readable, Writable } from "stream";
+    function duplexer(output: stream.Writable, input: stream.Readable): stream;
     export = duplexer;
 }
+
+declare type TStreamTransform = import("stream").Transform;
+declare type TTransformerParam1 = TMinimistParsedArgs & { _flags: Record<string, any> };
+declare type TTransformer = (file: string, opt: TTransformerParam1) => TStreamTransform;
+declare type TTransformFactory = (file: string, opts: Record<string, any>) => TStreamTransform;

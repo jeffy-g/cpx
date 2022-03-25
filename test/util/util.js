@@ -19,6 +19,11 @@ const BIN_PREFIX = fs.existsSync("./dist") ? "dist/" : fs.existsSync("./build") 
 // Public Interface
 //------------------------------------------------------------------------------
 /**
+ * @param {TCpxTestEntryItem} entry
+ * @returns
+ */
+module.exports.isCommand = (/** @type {TCpxTestEntryItem} */ entry) => entry.type === 1 /* CMD */;
+/**
  * Wait for the given duration.
  *
  * @param {number} ms The duration in milliseconds to wait.
@@ -114,13 +119,13 @@ module.exports.verifyTestDir = async function verifyTestDir(dataset) {
  * @param {string} args - Command arguments.
  * @returns {import("child_process").ChildProcess} A child process object.
  */
-module.exports.execCommand = function execCommand(args) {
+module.exports.execCpx = function execCpx(args) {
     return exec(`node ${BIN_PREFIX}test/util/bin.js ${args}`);
 };
 /**
  * Execute cpx command.
  * @param {string} args - Command arguments.
  */
-module.exports.execCommandSync = function execCommandSync(args) {
+module.exports.execCpxSync = function execCpxSync(args) {
     return execSync(`node ${BIN_PREFIX}test/util/bin.js ${args}`, { silent: true });
 };
