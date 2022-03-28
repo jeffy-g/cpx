@@ -16,7 +16,7 @@ This module provides a CLI tool like `cp`, but with watching.
 npm install cpx
 ```
 
-- Requires Node.js `>=6.5`.
+- Requires Node.js `>=12`.
 
 ## Usage
 

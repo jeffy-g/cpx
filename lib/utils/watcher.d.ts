@@ -1,4 +1,5 @@
 /// <reference types="node" />
+import * as fs from "fs-extra";
 import * as EventEmitter from "events";
 import * as m from "minimatch";
 export declare type TDebounced = (() => void) & {
@@ -6,6 +7,14 @@ export declare type TDebounced = (() => void) & {
 } & {
     flush(): void;
 };
+declare type TWatcherQueue = Map<string, "add" | "change" | "remove" | null>;
+declare type TWatcherRetries = Map<string, number>;
+declare type TWatcherCacheItem = {
+    watcher: fs.FSWatcher;
+    files: Map<string, fs.Stats>;
+};
+declare type TWatcherCache = Map<string, TWatcherCacheItem>;
+export declare type TWatcher = Watcher;
 /**
  * Watcher class.
  *
@@ -29,12 +38,12 @@ export declare class Watcher extends EventEmitter {
     initialCopyCount: number;
     onDoneInitialCopy: () => void;
     pending: boolean;
-    queue: Map<any, any>;
+    queue: TWatcherQueue;
     ready: boolean;
-    retries: Map<any, any>;
+    retries: TWatcherRetries;
     /** @type {TDebounced | null} */
     trigger: TDebounced | null;
-    watchers: Map<any, any>;
+    watchers: TWatcherCache;
     /**
      * Initialize this watcher.
      * @param {TNormalizeOption} options Normalized options.sform function's factories.
@@ -173,3 +182,4 @@ export declare class Watcher extends EventEmitter {
      */
     emit(type: string | symbol, ...args: any[]): boolean;
 }
+export {};

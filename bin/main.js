@@ -24,13 +24,17 @@ const resolve_1 = require("resolve");
 const shell_quote_1 = require("shell-quote");
 // @ts-ignore
 const duplexer = require("duplexer");
-const apply_action_1 = require("../lib/utils/apply-action");
-const apply_action_sync_1 = require("../lib/utils/apply-action-sync");
-const copy_file_1 = require("../lib/utils/copy-file");
-const normalize_options_1 = require("../lib/utils/normalize-options");
-const remove_file_sync_1 = require("../lib/utils/remove-file-sync");
+const utils = require("../lib/utils");
+const aa = require("../lib/utils/apply-action");
+const cf = require("../lib/utils/copy-file");
+const aas = require("../lib/utils/apply-action-sync");
+const rfs = require("../lib/utils/remove-file-sync");
 const watcher_1 = require("../lib/utils/watcher");
-const importSync = require("./webpack-import");
+const { normalizeOptions } = utils;
+const applyActionSync = aas.applyActionSync;
+const removeFileSync = rfs.removeFileSync;
+const applyAction = aa.applyAction;
+const copyFile = cf.copyFile;
 //------------------------------------------------------------------------------
 // Helpers
 //------------------------------------------------------------------------------
@@ -104,7 +108,7 @@ function main(source, outDir, args) {
         .map((/** @type {TArgEntry} */ item) => {
         const modId = ABS_OR_REL.test(item.name) ? (0, path_1.resolve)(item.name) : (0, resolve_1.sync)(item.name, { basedir: process.cwd() });
         /** @type {TTransformer} */
-        const createStream = importSync(modId);
+        const createStream = require(modId);
         return (file, opts) => createStream(file, Object.assign({ _flags: opts }, item.argv));
     });
     // Merge commands and transforms as same as order of process.argv.
@@ -123,7 +127,7 @@ function main(source, outDir, args) {
     // Main.
     /** @type {typeof console.log} */
     const log = args.verbose ? console.log.bind(console) : () => { };
-    const options = (0, normalize_options_1.normalizeOptions)(source, outDir, {
+    const options = normalizeOptions(source, outDir, {
         // @ts-ignore TODO: types
         transform: mergedTransformFactories,
         dereference: args.dereference,
@@ -139,8 +143,8 @@ function main(source, outDir, args) {
             log(`Clean: ${output}`);
             log();
             try {
-                (0, apply_action_sync_1.applyActionSync)(output, options, targetPath => {
-                    (0, remove_file_sync_1.removeFileSync)(targetPath);
+                applyActionSync(output, options, targetPath => {
+                    removeFileSync(targetPath);
                     log(`Removed: ${targetPath}`);
                 });
             }
@@ -173,10 +177,10 @@ function main(source, outDir, args) {
         log();
         log(`Copy: ${source} --> ${outDir}`);
         log();
-        (0, apply_action_1.applyAction)(options.source, options, sourcePath => {
+        applyAction(options.source, options, sourcePath => {
             const outputPath = options.toDestination(sourcePath);
             if (outputPath !== sourcePath) {
-                return (0, copy_file_1.copyFile)(sourcePath, outputPath, options).then(() => {
+                return copyFile(sourcePath, outputPath, options).then(() => {
                     log(`Copied: ${sourcePath} --> ${outputPath}`);
                 });
             }

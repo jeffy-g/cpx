@@ -1,4 +1,4 @@
-import { Watcher } from "./utils/watcher";
+import * as w from "./utils/watcher";
 /**
  * Watch files then copy the files on each change.
  * @param {string} source The glob pattern of target files.
@@ -6,4 +6,4 @@ import { Watcher } from "./utils/watcher";
  * @param {TCopyOptions} [options] The options.
  * @returns {import("./utils/watcher").Watcher} The watcher object which observes the files.
  */
-export declare function watch(source: string, outputDir: string, options?: TCopyOptions): Watcher;
+export declare function watch(source: string, outputDir: string, options?: TCopyOptions): w.TWatcher;
