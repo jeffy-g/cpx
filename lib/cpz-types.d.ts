@@ -8,7 +8,7 @@ declare global {
     // DEVNOTE: 2022/03/24 - fix: [Critical dependency: the request of a dependency is an expression] at webpack build
     type TMinimistParsedArgs = minimist.ParsedArgs;
 
-    type TCopyOptions = {
+    type TCpxOptions = {
         /** The flag to remove files that copied on past before copy. Default: `false`. */
         clean?: boolean;
         /** The flag to follow symbolic links when copying from them. Default: `false`. */
@@ -25,7 +25,7 @@ declare global {
         update?: boolean;
     }
 
-    type TNormalizeOption = TCopyOptions & {
+    type TNormalizedCpxOption = TCpxOptions & {
         baseDir: string;
         outputDir: string;
         source: string;
@@ -79,7 +79,7 @@ declare global {
     type TCpxTestEntryItem = TTestEntryItem & {
         patternOrCmd: string;
         dest?: string;
-        opts?: TCopyOptions;
+        opts?: TCpxOptions;
     };
 
     type TWatchTestEntry = {

@@ -46,9 +46,9 @@ export declare class Watcher extends EventEmitter {
     watchers: TWatcherCache;
     /**
      * Initialize this watcher.
-     * @param {TNormalizeOption} options Normalized options.sform function's factories.
+     * @param {TNormalizedCpxOption} options Normalized options.sform function's factories.
      */
-    constructor(options: TNormalizeOption);
+    constructor(options: TNormalizedCpxOption);
     /**
      * Open this watcher.
      * @returns {void}

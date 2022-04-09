@@ -192,4 +192,3 @@ function main(source, outDir, args) {
     }
 }
 exports.main = main;
-/*eslint-enable no-process-exit, no-process-env */

@@ -61,73 +61,41 @@ describe("The watch method", () => {
         await teardownTestDir("test-ws");
     });
     /**
+     * @param {string} event
+     * @param {string} criteria
+     * @returns {() => Promise<void>}
+     */
+    function createWaiter(event, criteria) {
+        return async () => {
+            if (watcher) {
+                await pEvent(watcher, event);
+            }
+            else if (command) {
+                while (true) {
+                    const chunk = await pEvent(/** @type {NonNullable<ChildProcess["stdout"]>} */ (command.stdout), "data");
+                    if (chunk.indexOf(criteria) >= 0) {
+                        break;
+                    }
+                }
+            }
+            await delay(TEST_WATCH_DELAY);
+        };
+    }
+    /**
      * Wait for ready.
      * @returns {Promise<void>} The promise which will go fulfilled after done.
      */
-    const waitForReady = async () => {
-        if (watcher) {
-            await pEvent(watcher, "watch-ready");
-        }
-        else if (command) {
-            while (true) {
-                const chunk = await pEvent(/** @type {NonNullable<ChildProcess["stdout"]>} */ (command.stdout), "data");
-                if (chunk.indexOf("Be watching") >= 0) {
-                    break;
-                }
-            }
-        }
-        await delay(TEST_WATCH_DELAY);
-    };
+    const waitForReady = createWaiter("watch-ready", "Be watching");
     /**
      * Wait for a copy.
      * @returns {Promise<void>} The promise which will go fulfilled after done.
      */
-    const waitForCopy = async () => {
-        if (watcher) {
-            await pEvent(watcher, "copy");
-        }
-        else if (command) {
-            // TODO: refine await statement instead of `pEvent`
-            /*
-            let c = 0;
-            while (true) {
-                const chunk = await pEvent(/** @type {NonNullable<ChildProcess["stdout"]>} * /(command.stdout), "data");
-                c++;
-                console.log(`waitForCopy::command - data: [${chunk}] count: ${c}`);
-                if (chunk.indexOf("Copied:") >= 0) {
-                    // console.log(`waitForCopy::command - count: ${c}`);
-                    break;
-                }
-            }
-            /*/
-            while (true) {
-                const chunk = await pEvent(/** @type {NonNullable<ChildProcess["stdout"]>} */ (command.stdout), "data");
-                if (chunk.indexOf("Copied:") >= 0) {
-                    break;
-                }
-            }
-            //*/
-        }
-        await delay(TEST_WATCH_DELAY);
-    };
+    const waitForCopy = createWaiter("copy", "Copied:");
     /**
      * Wait for a remove.
      * @returns {Promise<void>} The promise which will go fulfilled after done.
      */
-    const waitForRemove = async () => {
-        if (watcher) {
-            await pEvent(watcher, "remove");
-        }
-        else if (command) {
-            while (true) {
-                const chunk = await pEvent(/** @type {NonNullable<ChildProcess["stdout"]>} */ (command.stdout), "data");
-                if (chunk.indexOf("Removed:") >= 0) {
-                    break;
-                }
-            }
-        }
-        await delay(TEST_WATCH_DELAY);
-    };
+    const waitForRemove = createWaiter("remove", "Removed:");
     //==========================================================================
     /** @type {TCpxTestEntry[]} */
     const testEntries = [{
@@ -339,9 +307,7 @@ describe("The watch method", () => {
                         command = execCpx(e.patternOrCmd);
                     }
                     else {
-                        watcher = cpx.watch(e.patternOrCmd, 
-                        // @ts-ignore
-                        e.dest, e.opts);
+                        watcher = cpx.watch(e.patternOrCmd, /** @type {string} */ (e.dest), e.opts);
                     }
                     await waitForReady();
                     await verifyTestDir(te.verifyData);
@@ -441,8 +407,7 @@ describe("The watch method", () => {
     ];
     for (const pattern of patterns) {
         //eslint-disable-next-line no-loop-func
-        // @ts-ignore 2022/3/17 20:50:18 - NOTE: author の意図なのか?, 
-        //  以前に `describe.only` を使用していたのか?...
+        // @ts-ignore 
         (pattern.only ? describe.only : describe)(pattern.description, () => {
             beforeEach(() => setupTestDir(pattern.initialFiles));
             it("lib version.", async () => {
@@ -601,7 +566,6 @@ describe("The watch method", () => {
     });
     describe("should copy it when a file is modified even if there are parentheses in path:", () => {
         beforeEach(() => setupTestDir({
-            //
             "test-ws/a(paren)/hello.txt": "Hello",
         }));
         /**

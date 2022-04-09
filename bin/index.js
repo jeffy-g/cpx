@@ -96,7 +96,7 @@ if (modId) {
     /** @type {TCpxBinMod} */
     const module = require(`./${modId}`);
     if (modId !== "main") {
-        /** @type {TCpxBinMod["help" | "version"]} */ (module[modId])();
+        module[modId]();
     }
     else {
         module.main(source, outDir, args);

@@ -47,9 +47,7 @@ describe("The copy method", () => {
         it("lib async version.", done => {
             cpx.copy("test-ws/a/**/*.txt", "test-ws/b", () => verifyTestDir(dataset).then(() => done(), done));
         });
-        it("lib async version (promise).", () => cpx
-            .copy("test-ws/a/**/*.txt", "test-ws/b")
-            .then(() => verifyTestDir(dataset)));
+        it("lib async version (promise).", () => cpx.copy("test-ws/a/**/*.txt", "test-ws/b").then(() => verifyTestDir(dataset)));
         it("lib sync version.", () => {
             cpx.copySync("test-ws/a/**/*.txt", "test-ws/b");
             return verifyTestDir(dataset);

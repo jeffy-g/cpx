@@ -24,7 +24,10 @@ const through = require("through");
  */
 function toUpperCase() {
     return through(
-    /** @this ThroughStream */
+    /**
+     * @param {Parameters<Parameters<typeof through>[0]>[0]} chunk
+     * @this ThroughStream
+     */
     function write(chunk) {
         this.queue(chunk.toString().toUpperCase());
     }, 
