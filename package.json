@@ -60,7 +60,9 @@
   },
   "homepage": "https://github.com/jeffy-g/cpx",
   "scripts": {
-    "test": "bash ./scripts/fire-mocha.sh"
+    "test": "bash ./scripts/fire-mocha.sh",
+    "ic": "npx rimraf yarn.lock node_modules && yarn install",
+    "up": "yarn upgrade-interactive --latest"
   },
   "devDependencies": {
     "@types/debounce": "^1.2.1",
