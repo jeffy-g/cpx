@@ -18,7 +18,7 @@ const assert = require("assert");
 const path = require("path");
 const fs = require("fs-extra");
 // import { pEvent }  from "p-event";
-const pEvent = require("p-event");
+const { pEvent } = require("p-event");
 const ensureDir = fs.ensureDir;
 const remove = fs.remove;
 const cpx = require("../lib");

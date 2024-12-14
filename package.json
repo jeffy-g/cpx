@@ -13,19 +13,6 @@
     "bin",
     "lib"
   ],
-  "dependencies": {
-    "debounce": "^1.2.1",
-    "debug": "^4.3.3",
-    "duplexer": "^0.1.2",
-    "fs-extra": "^10.0.1",
-    "glob": "^7.2.0",
-    "glob2base": "0.0.12",
-    "minimatch": "^5.0.1",
-    "resolve": "^1.22.0",
-    "safe-buffer": "^5.2.1",
-    "shell-quote": "^1.7.3",
-    "subarg": "^1.0.0"
-  },
   "repository": {
     "type": "git",
     "url": "https://github.com/jeffy-g/cpx.git"
@@ -64,19 +51,32 @@
     "ic": "npx rimraf yarn.lock node_modules && yarn install",
     "up": "yarn upgrade-interactive --latest"
   },
+  "dependencies": {
+    "debounce": "^1.2.1",
+    "debug": "^4.3.3",
+    "duplexer": "^0.1.2",
+    "fs-extra": "^10.0.1",
+    "glob": "^7.2.0",
+    "glob2base": "0.0.12",
+    "minimatch": "^5.0.1",
+    "resolve": "^1.22.0",
+    "safe-buffer": "^5.2.1",
+    "shell-quote": "^1.7.3",
+    "subarg": "^1.0.0"
+  },
   "devDependencies": {
     "@types/debounce": "^1.2.1",
     "@types/debug": "^4.1.7",
-    "@types/fs-extra": "^9.0.13",
-    "@types/mocha": "^9.1.0",
-    "@types/node": "^17.0.23",
+    "@types/fs-extra": "^11.0.4",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^22.10.2",
     "@types/resolve": "^1.20.1",
     "@types/shell-quote": "^1.7.1",
     "@types/shelljs": "^0.8.11",
-    "@types/through": "^0.0.30",
-    "mocha": "^9.2.2",
-    "p-event": "=4.2.0",
-    "rimraf": "^3.0.2",
+    "@types/through": "^0.0.33",
+    "mocha": "^11.0.1",
+    "p-event": "6.0.1",
+    "rimraf": "^6.0.1",
     "shelljs": "^0.8.5",
     "through": "^2.3.8"
   }
