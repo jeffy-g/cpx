@@ -1,3 +1,4 @@
+"use strict";
 /**
  * @author Toru Nagashima
  * @copyright 2016 Toru Nagashima. All rights reserved.
@@ -10,7 +11,6 @@
   https://opensource.org/licenses/mit-license.php
  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 */
-"use strict";
 //------------------------------------------------------------------------------
 // Requirements
 //------------------------------------------------------------------------------

@@ -1,9 +1,9 @@
+"use strict";
 /**
  * @author Toru Nagashima
  * @copyright 2016 Toru Nagashima. All rights reserved.
  * See LICENSE file in root directory for full license.
  */
-"use strict";
 //------------------------------------------------------------------------------
 // Requirements
 //------------------------------------------------------------------------------
@@ -36,7 +36,7 @@ const delay = (module.exports.delay = function delay(ms) {
  * Writes specific data to a specific file.
  *
  * @param {string} path - A path to write.
- * @param {string | null} contentText - A text to write.
+ * @param {string} contentText - A text to write.
  * @returns {Promise<void>} The promise which will go fulfilled after done.
  */
 async function writeFile(path, contentText) {
