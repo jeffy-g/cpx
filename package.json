@@ -58,7 +58,7 @@
     "fs-extra": "^10.0.1",
     "glob": "^7.2.0",
     "glob2base": "0.0.12",
-    "minimatch": "^5.0.1",
+    "minimatch": "^10.0.1",
     "resolve": "^1.22.0",
     "safe-buffer": "^5.2.1",
     "shell-quote": "^1.7.3",
