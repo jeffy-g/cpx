@@ -52,7 +52,7 @@
     "up": "yarn upgrade-interactive --latest"
   },
   "dependencies": {
-    "debounce": "^1.2.1",
+    "debounce": "^2.2.0",
     "debug": "^4.3.3",
     "duplexer": "^0.1.2",
     "fs-extra": "^10.0.1",
