@@ -10,6 +10,7 @@
   https://opensource.org/licenses/mit-license.php
  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 */
+/// <reference path="./cpz-types.d.ts"/>
 import * as C from "./copy";
 import * as CS from "./copy-sync";
 import * as W from "./watch";
