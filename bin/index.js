@@ -29,7 +29,8 @@ const args = subarg(process.argv.slice(2), {
         c: "command",
         C: "clean",
         h: "help",
-        includeEmptyDirs: "include-empty-dirs",
+        includeEmptyDirs: ["include-empty-dirs", "e"],
+        includeDotFiles: ["dot", "d"],
         L: "dereference",
         p: "preserve",
         t: "transform",
@@ -43,6 +44,7 @@ const args = subarg(process.argv.slice(2), {
         "dereference",
         "help",
         "include-empty-dirs",
+        "dot",
         "initial",
         "preserve",
         "update",
@@ -58,7 +60,6 @@ const args = subarg(process.argv.slice(2), {
         if (arg[0] === "-") {
             unknowns.add(arg);
         }
-        // DEVNOTE: 2022/03/15 - fix missed type
         return true;
     }
 });
@@ -70,11 +71,8 @@ const outDir = args._[1];
  * @prop {() => void} version
  * @prop {(input: string, output: string, args: TMinimistParsedArgs) => void} main
  */
-
-/** @type {keyof TCpxBinMod} */
-// @ts-ignore 
-let modId = "";
-// Validate Options.
+/** @type {keyof TCpxBinMod=} */
+let modId;
 if (unknowns.size > 0) {
     console.error(`Unknown option(s): ${Array.from(unknowns).join(", ")}`);
     process.exitCode = 1;
@@ -94,7 +92,8 @@ else {
 }
 if (modId) {
     /** @type {TCpxBinMod} */
-    const module = require(`./${modId}`);
+    const module = require(
+    /* webpackInclude: /(main|help|version)/ */ `./${modId}`);
     if (modId !== "main") {
         module[modId]();
     }

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.version = void 0;
+exports.version = version;
 /**
  * @author Toru Nagashima
  * @copyright 2016 Toru Nagashima. All rights reserved.
@@ -25,4 +25,3 @@ function version() {
     // @ts-ignore
     console.log(`v${require("../package.json").version}`);
 }
-exports.version = version;

@@ -1,20 +1,36 @@
-/// <reference types="node" />
 import * as fs from "fs-extra";
 import * as EventEmitter from "events";
 import * as m from "minimatch";
-export declare type TDebounced = (() => void) & {
+export type TWalkDirectoryEntry = {
+    path: string;
+    files: Map<string, fs.Stats>;
+};
+export type TDebounced = (() => void) & {
     clear(): void;
 } & {
     flush(): void;
 };
-declare type TWatcherQueue = Map<string, "add" | "change" | "remove" | null>;
-declare type TWatcherRetries = Map<string, number>;
-declare type TWatcherCacheItem = {
+export type TWatcherCopy = {
+    srcPath: string;
+    dstPath: string;
+};
+export type TWatcherRemove = {
+    path: string;
+};
+type TWatcherEventMap = {
+    copy: TWatcherCopy;
+    remove: TWatcherRemove;
+    "watch-ready": void;
+    "watch-error": Error;
+};
+type TWatcherQueue = Map<string, "add" | "change" | "remove" | null>;
+type TWatcherRetries = Map<string, number>;
+type TWatcherCacheItem = {
     watcher: fs.FSWatcher;
     files: Map<string, fs.Stats>;
 };
-declare type TWatcherCache = Map<string, TWatcherCacheItem>;
-export declare type TWatcher = Watcher;
+type TWatcherCache = Map<string, TWatcherCacheItem>;
+export type TWatcher = Watcher;
 /**
  * Watcher class.
  *
@@ -27,6 +43,7 @@ export declare class Watcher extends EventEmitter {
     baseDir: string;
     dereference: boolean | undefined;
     includeEmptyDirs: boolean | undefined;
+    includeDotFiles: boolean | undefined;
     initialCopy: boolean | undefined;
     matcher: m.IMinimatch;
     outputDir: string;
@@ -175,11 +192,13 @@ export declare class Watcher extends EventEmitter {
      */
     private remove;
     /**
-     * @param {string | symbol} type
-     * @param {any[]} args
      * @inheritdoc
-     * @override
      */
-    emit(type: string | symbol, ...args: any[]): boolean;
+    on<K extends keyof TWatcherEventMap>(type: K, listener: TWatcherEventMap[K] extends void ? () => void : (event: TWatcherEventMap[K]) => void): this;
+    on(type: string | symbol, listener: (...args: any[]) => void): this;
+    emit(type: "copy", event: TWatcherCopy): boolean;
+    emit(type: "remove", event: TWatcherRemove): boolean;
+    emit(type: "watch-ready"): boolean;
+    emit(type: "watch-error", error: Error): boolean;
 }
 export {};

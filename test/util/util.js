@@ -1,19 +1,18 @@
-"use strict";
 /**
  * @author Toru Nagashima
  * @copyright 2016 Toru Nagashima. All rights reserved.
  * See LICENSE file in root directory for full license.
  */
+"use strict";
 //------------------------------------------------------------------------------
 // Requirements
 //------------------------------------------------------------------------------
 const assert = require("assert");
-const exec = require("child_process").exec;
+const cp = require("child_process");
+const exec = cp.exec;
 const dirname = require("path").dirname;
-// const co = require("co");
 const fs = require("fs-extra");
-const execSync = require("shelljs").exec;
-// const ON_BUILD = fs.existsSync("./build");
+const execSync = cp.execSync;
 const BIN_PREFIX = fs.existsSync("./dist") ? "dist/" : fs.existsSync("./build") ? "build/" : "";
 //------------------------------------------------------------------------------
 // Public Interface
@@ -22,7 +21,7 @@ const BIN_PREFIX = fs.existsSync("./dist") ? "dist/" : fs.existsSync("./build") 
  * @param {TCpxTestEntryItem} entry
  * @returns
  */
-module.exports.isCommand = (/** @type {TCpxTestEntryItem} */ entry) => entry.type === 1 /* CMD */;
+module.exports.isCommand = (/** @type {TCpxTestEntryItem} */ entry) => entry.type === 1 /* ETestEntryType.CMD */;
 /**
  * Wait for the given duration.
  *
@@ -36,21 +35,18 @@ const delay = (module.exports.delay = function delay(ms) {
  * Writes specific data to a specific file.
  *
  * @param {string} path - A path to write.
- * @param {string} contentText - A text to write.
+ * @param {string | null} contentText - A text to write.
  * @returns {Promise<void>} The promise which will go fulfilled after done.
  */
 async function writeFile(path, contentText) {
+    if (contentText === null || contentText === undefined) {
+        console.warn("contentText is invalid", contentText);
+        return;
+    }
     await fs.ensureDir(dirname(path));
     await fs.writeFile(path, contentText);
 }
 module.exports.writeFile = writeFile;
-// const writeFile = (module.exports.writeFile = co.wrap(function* writeFile(
-//     path,
-//     contentText
-// ) {
-//     yield fs.ensureDir(dirname(path));
-//     yield fs.writeFile(path, contentText);
-// }));
 /**
  * Removes a specific file.
  *
@@ -71,11 +67,13 @@ const readFile = (module.exports.content = async function content(path) {
         return await fs.readFile(path, { encoding: "utf8" });
     }
     catch (reason) {
-        // console.log(reason);
         return null;
     }
 });
-const WAIT = 100;
+// 2026/03/06 04:10:10 - node v25.6.1
+// 16ms - test 19sec
+// 50ms - test 22sec
+const WAIT = 50;
 /**
  * Sets up test files.
  *
@@ -83,9 +81,11 @@ const WAIT = 100;
  * @returns {Promise<void>} The promise which will go fulfilled after done.
  */
 module.exports.setupTestDir = function setupTestDir(dataset) {
-    return Promise.all(Object.keys(dataset).map(path => dataset[path] == null
-        ? fs.ensureDir(path)
-        : writeFile(path, dataset[path]))).then(() => delay(WAIT));
+    return Promise.all(Object.keys(dataset).map(path => {
+        return dataset[path] == null
+            ? fs.ensureDir(path)
+            : writeFile(path, dataset[path]);
+    })).then(() => delay(WAIT));
 };
 /**
  * Removes test data.
@@ -108,12 +108,6 @@ module.exports.verifyTestDir = async function verifyTestDir(dataset) {
         assert.strictEqual(content, dataset[path]);
     }
 };
-// module.exports.verifyTestDir = co.wrap(function* verifyTestDir(dataset) {
-//     for (const path of Object.keys(dataset)) {
-//         const content = yield readFile(path);
-//         assert.strictEqual(content, dataset[path]);
-//     }
-// });
 /**
  * Execute cpx command.
  * @param {string} args - Command arguments.
@@ -127,5 +121,23 @@ module.exports.execCpx = function execCpx(args) {
  * @param {string} args - Command arguments.
  */
 module.exports.execCpxSync = function execCpxSync(args) {
-    return execSync(`node ${BIN_PREFIX}test/util/bin.js ${args}`, { silent: true });
+    const command = `node ${BIN_PREFIX}test/util/bin.js ${args}`;
+    try {
+        const stdout = execSync(command, {
+            encoding: "utf8",
+            stdio: "pipe",
+        });
+        return {
+            code: 0,
+            stdout,
+            stderr: "",
+        };
+    }
+    catch ( /** @type {any} */e) {
+        return {
+            code: typeof e.status === "number" ? e.status : 1,
+            stdout: typeof e.stdout === "string" ? e.stdout : String(e.stdout || ""),
+            stderr: typeof e.stderr === "string" ? e.stderr : String(e.stderr || ""),
+        };
+    }
 };

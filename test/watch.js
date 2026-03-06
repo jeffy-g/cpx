@@ -1,4 +1,3 @@
-"use strict";
 /**
  * @author Toru Nagashima
  * @copyright 2016 Toru Nagashima. All rights reserved.
@@ -11,13 +10,13 @@
   https://opensource.org/licenses/mit-license.php
  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 */
+"use strict";
 //------------------------------------------------------------------------------
 // Requirements
 //------------------------------------------------------------------------------
 const assert = require("assert");
 const path = require("path");
 const fs = require("fs-extra");
-// import { pEvent }  from "p-event";
 const pEvent = require("p-event");
 const ensureDir = fs.ensureDir;
 const remove = fs.remove;
@@ -122,11 +121,11 @@ describe("The watch method", () => {
             },
             entries: [
                 {
-                    type: 2 /* LIB */,
+                    type: 2 /* ETestEntryType.LIB */,
                     patternOrCmd: "test-ws/a/**/*.txt",
                     dest: "test-ws/b"
                 }, {
-                    type: 1 /* CMD */,
+                    type: 1 /* ETestEntryType.CMD */,
                     patternOrCmd: '"test-ws/a/**/*.txt" test-ws/b --watch --verbose'
                 }
             ]
@@ -146,14 +145,14 @@ describe("The watch method", () => {
             },
             entries: [
                 {
-                    type: 2 /* LIB */,
+                    type: 2 /* ETestEntryType.LIB */,
                     patternOrCmd: "test-ws/a/**/*.txt",
                     dest: "test-ws/b",
                     opts: {
                         dereference: true,
                     }
                 }, {
-                    type: 1 /* CMD */,
+                    type: 1 /* ETestEntryType.CMD */,
                     patternOrCmd: '"test-ws/a/**/*.txt" test-ws/b --watch --dereference --verbose'
                 }
             ]
@@ -173,14 +172,14 @@ describe("The watch method", () => {
             },
             entries: [
                 {
-                    type: 2 /* LIB */,
+                    type: 2 /* ETestEntryType.LIB */,
                     patternOrCmd: "test-ws/a/**/*.txt",
                     dest: "test-ws/b",
                     opts: {
                         dereference: false,
                     }
                 }, {
-                    type: 1 /* CMD */,
+                    type: 1 /* ETestEntryType.CMD */,
                     patternOrCmd: '"test-ws/a/**/*.txt" test-ws/b --watch --verbose'
                 }
             ]
@@ -208,11 +207,11 @@ describe("The watch method", () => {
             },
             entries: [
                 {
-                    type: 2 /* LIB */,
+                    type: 2 /* ETestEntryType.LIB */,
                     patternOrCmd: "./test-ws/a/**/*.txt",
                     dest: "test-ws/b",
                 }, {
-                    type: 1 /* CMD */,
+                    type: 1 /* ETestEntryType.CMD */,
                     patternOrCmd: '"./test-ws/a/**/*.txt" test-ws/b --watch --verbose'
                 }
             ]
@@ -244,14 +243,14 @@ describe("The watch method", () => {
             },
             entries: [
                 {
-                    type: 2 /* LIB */,
+                    type: 2 /* ETestEntryType.LIB */,
                     patternOrCmd: "./test-ws/a/**/*.txt",
                     dest: "test-ws/b",
                     opts: {
                         clean: true,
                     }
                 }, {
-                    type: 1 /* CMD */,
+                    type: 1 /* ETestEntryType.CMD */,
                     patternOrCmd: '"test-ws/a/**/*.txt" test-ws/b --clean --watch --verbose'
                 }
             ]
@@ -279,15 +278,43 @@ describe("The watch method", () => {
             },
             entries: [
                 {
-                    type: 2 /* LIB */,
+                    type: 2 /* ETestEntryType.LIB */,
                     patternOrCmd: "test-ws/a/**/*.txt",
                     dest: "test-ws/b",
                     opts: {
                         initialCopy: false,
                     }
                 }, {
-                    type: 1 /* CMD */,
+                    type: 1 /* ETestEntryType.CMD */,
                     patternOrCmd: '"test-ws/a/**/*.txt" test-ws/b --no-initial --watch --verbose'
+                }
+            ]
+        }, {
+            testTitle: "should copy dotfiles with globs at first when `--dot` option was given:",
+            setupData: {
+                "test-ws/a/.hidden.txt": "Hidden",
+                "test-ws/a/visible.txt": "Visible",
+            },
+            verifyData: {
+                "test-ws/a/.hidden.txt": "Hidden",
+                "test-ws/a/visible.txt": "Visible",
+                "test-ws/b/.hidden.txt": "Hidden",
+                "test-ws/b/visible.txt": "Visible",
+            },
+            entries: [
+                {
+                    type: 2 /* ETestEntryType.LIB */,
+                    patternOrCmd: "test-ws/a/**/*.txt",
+                    dest: "test-ws/b",
+                    opts: {
+                        includeDotFiles: true,
+                    }
+                }, {
+                    type: 1 /* ETestEntryType.CMD */,
+                    patternOrCmd: '"test-ws/a/**/*.txt" test-ws/b --dot --watch --verbose'
+                }, {
+                    type: 1 /* ETestEntryType.CMD */,
+                    patternOrCmd: '"test-ws/a/**/*.txt" test-ws/b -d --watch --verbose'
                 }
             ]
         }];
@@ -333,10 +360,6 @@ describe("The watch method", () => {
             description: "should do nothing on file added if unmatch file globs:",
             initialFiles: { "test-ws/a/hello.txt": "Hello" },
             async action() {
-                // return (async () => {
-                //     await writeFile("test-ws/a/b/not-added.dat", "added");
-                //     await writeFile("test-ws/a/a.txt", "a");
-                // })();
                 await writeFile("test-ws/a/b/not-added.dat", "added");
                 await writeFile("test-ws/a/a.txt", "a");
             },
@@ -362,10 +385,6 @@ describe("The watch method", () => {
                 "test-ws/a/hello.dat": "Hello",
             },
             async action() {
-                // return (async () => {
-                //     await writeFile("test-ws/a/hello.dat", "changed");
-                //     await writeFile("test-ws/a/a.txt", "a");
-                // })();
                 await writeFile("test-ws/a/hello.dat", "changed");
                 await writeFile("test-ws/a/a.txt", "a");
             },
@@ -391,10 +410,6 @@ describe("The watch method", () => {
                 "test-ws/a/hello.dat": "Hello",
             },
             async action() {
-                // return (async () => {
-                //     await removeFile("test-ws/a/hello.dat");
-                //     await writeFile("test-ws/a/hello.txt", "changed");
-                // })();
                 await removeFile("test-ws/a/hello.dat");
                 await writeFile("test-ws/a/hello.txt", "changed");
             },
@@ -496,6 +511,13 @@ describe("The watch method", () => {
             await waitForCopy();
             await verifyFiles();
         });
+        it("command version with short option.", async () => {
+            command = execCpx('"test-ws/a/**" test-ws/b -e --watch --verbose');
+            await waitForReady();
+            await ensureDir("test-ws/a/c");
+            await waitForCopy();
+            await verifyFiles();
+        });
     });
     describe("should remove it on destination when an empty directory is removed when '--include-empty-dirs' option was given:", () => {
         beforeEach(() => setupTestDir({
@@ -525,6 +547,13 @@ describe("The watch method", () => {
         });
         it("command version.", async () => {
             command = execCpx('"test-ws/a/**" test-ws/b --include-empty-dirs --watch --verbose');
+            await waitForReady();
+            await remove("test-ws/a/c");
+            await waitForRemove();
+            await verifyFiles();
+        });
+        it("command version with short option.", async () => {
+            command = execCpx('"test-ws/a/**" test-ws/b -e --watch --verbose');
             await waitForReady();
             await remove("test-ws/a/c");
             await waitForRemove();

@@ -30,7 +30,7 @@ function toUpperCase() {
      */
     function write(chunk) {
         this.queue(chunk.toString().toUpperCase());
-    }, 
+    },
     /** @this ThroughStream */
     function end() {
         this.queue(null);

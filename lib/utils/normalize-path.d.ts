@@ -4,6 +4,5 @@
  *
  * @param {string} originalPath - The path to convert.
  * @returns {string} The normalized path.
- * @private
  */
 export declare function normalizePath(originalPath: string): string;

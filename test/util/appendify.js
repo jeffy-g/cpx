@@ -23,7 +23,7 @@ function append(_filename, args) {
     /** @this ThroughStream */
     function write(chunk) {
         this.queue(chunk);
-    }, 
+    },
     /** @this ThroughStream */
     function end() {
         const value = (args && args._ && args._[0]) || postfix;

@@ -15,7 +15,7 @@
 // Exports
 //------------------------------------------------------------------------------
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.help = void 0;
+exports.help = help;
 /**
  * Prints the help text.
  *
@@ -37,8 +37,9 @@ Options:
                               <dest> directory before the first copying.
     -L, --dereference         Follow symbolic links when copying from them.
     -h, --help                Print usage information.
-    --include-empty-dirs      The flag to copy empty directories which is
+    -e, --include-empty-dirs  The flag to copy empty directories which is
                               matched with the glob.
+    -d, --dot                 Include dotfiles in glob matches.
     --no-initial              The flag to not copy at the initial time of watch.
                               Use together '--watch' option.
     -p, --preserve            The flag to copy attributes of files.
@@ -61,4 +62,3 @@ See Also:
     https://github.com/mysticatea/cpx
 `);
 }
-exports.help = help;

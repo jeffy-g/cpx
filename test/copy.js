@@ -1,9 +1,9 @@
-"use strict";
 /**
  * @author Toru Nagashima
  * @copyright 2016 Toru Nagashima. All rights reserved.
  * See LICENSE file in root directory for full license.
  */
+"use strict";
 //------------------------------------------------------------------------------
 // Requirements
 //------------------------------------------------------------------------------
@@ -184,6 +184,10 @@ describe("The copy method", () => {
             execCpxSync('"test-ws/a/**" test-ws/b --include-empty-dirs');
             return verifyFiles();
         });
+        it("command version with short option.", () => {
+            execCpxSync('"test-ws/a/**" test-ws/b -e');
+            return verifyFiles();
+        });
     });
     describe("should not copy specified empty directories with globs when `--include-empty-dirs` option was not given:", () => {
         beforeEach(() => setupTestDir({
@@ -216,6 +220,36 @@ describe("The copy method", () => {
         it("command version.", () => {
             execCpxSync('"test-ws/a/**" test-ws/b');
             return verifyFiles();
+        });
+    });
+    describe("should copy dotfiles when `--dot` option was given:", () => {
+        beforeEach(() => setupTestDir({
+            "test-ws/a/.hidden.txt": "Hidden",
+            "test-ws/a/visible.txt": "Visible",
+        }));
+        afterEach(onAfterEach);
+        const dataset = {
+            "test-ws/a/.hidden.txt": "Hidden",
+            "test-ws/a/visible.txt": "Visible",
+            "test-ws/b/.hidden.txt": "Hidden",
+            "test-ws/b/visible.txt": "Visible",
+        };
+        it("lib async version.", done => {
+            cpx.copy("test-ws/a/**/*.txt", "test-ws/b", { includeDotFiles: true }, () => verifyTestDir(dataset).then(() => done(), done));
+        });
+        it("lib sync version.", () => {
+            cpx.copySync("test-ws/a/**/*.txt", "test-ws/b", {
+                includeDotFiles: true,
+            });
+            return verifyTestDir(dataset);
+        });
+        it("command version.", () => {
+            execCpxSync('"test-ws/a/**/*.txt" test-ws/b --dot');
+            return verifyTestDir(dataset);
+        });
+        it("command version with short option.", () => {
+            execCpxSync('"test-ws/a/**/*.txt" test-ws/b -d');
+            return verifyTestDir(dataset);
         });
     });
     describe("should copy specified files with globs when `--preserve` option was given:", () => {

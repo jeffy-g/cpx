@@ -1,6 +1,7 @@
+/// <reference path="../lib/cpz-types.d.ts" preserve="true"/>
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.main = void 0;
+exports.main = main;
 /**
  * @author Toru Nagashima
  * @copyright 2016 Toru Nagashima. All rights reserved.
@@ -13,15 +14,14 @@ exports.main = void 0;
   https://opensource.org/licenses/mit-license.php
  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 */
-//TODO: remove.
-/*eslint-disable no-process-exit, no-process-env */
+/* eslint-disable no-process-exit, no-process-env */
 //------------------------------------------------------------------------------
 // Requirements
 //------------------------------------------------------------------------------
-const path_1 = require("path");
-const child_process_1 = require("child_process");
-const resolve_1 = require("resolve");
-const shell_quote_1 = require("shell-quote");
+const path = require("path");
+const cp = require("child_process");
+const rslv = require("resolve");
+const sq = require("shell-quote");
 // @ts-ignore
 const duplexer = require("duplexer");
 const utils = require("../lib/utils");
@@ -29,12 +29,18 @@ const aa = require("../lib/utils/apply-action");
 const cf = require("../lib/utils/copy-file");
 const aas = require("../lib/utils/apply-action-sync");
 const rfs = require("../lib/utils/remove-file-sync");
-const watcher_1 = require("../lib/utils/watcher");
+const wt = require("../lib/utils/watcher");
+const { resolve: resolvePath } = path;
+const { parse: parseShellQuote } = sq;
+const { sync: resolveModule } = rslv;
+const { spawn } = cp;
 const { normalizeOptions } = utils;
 const applyActionSync = aas.applyActionSync;
 const removeFileSync = rfs.removeFileSync;
 const applyAction = aa.applyAction;
 const copyFile = cf.copyFile;
+const { Watcher } = wt;
+const importSync = require("./webpack-import");
 //------------------------------------------------------------------------------
 // Helpers
 //------------------------------------------------------------------------------
@@ -79,8 +85,8 @@ function main(source, outDir, args) {
             const env = Object.create(process.env, {
                 FILE: { value: file },
             });
-            const parts = /** @type {string[]} */ (0, shell_quote_1.parse)(command, env);
-            const child = (0, child_process_1.spawn)(parts[0], parts.slice(1), { env });
+            const parts = /** @type {string[]} */ (parseShellQuote(command, env));
+            const child = spawn(parts[0], parts.slice(1), { env });
             const outer = duplexer(child.stdin, child.stdout);
             child.on("exit", code => {
                 if (code !== 0) {
@@ -106,13 +112,12 @@ function main(source, outDir, args) {
         process.exit(1);
     })
         .map((/** @type {TArgEntry} */ item) => {
-        const modId = ABS_OR_REL.test(item.name) ? (0, path_1.resolve)(item.name) : (0, resolve_1.sync)(item.name, { basedir: process.cwd() });
+        const modId = ABS_OR_REL.test(item.name) ? resolvePath(item.name) : resolveModule(item.name, { basedir: process.cwd() });
         /** @type {TTransformer} */
-        const createStream = require(modId);
+        const createStream = importSync(modId);
         return (file, opts) => createStream(file, Object.assign({ _flags: opts }, item.argv));
     });
     // Merge commands and transforms as same as order of process.argv.
-    // DEVNOTE: 2022/03/17 - TODO: types
     const mergedTransformFactories = process.argv
         .map(part => {
         if (C_OR_COMMAND.test(part)) {
@@ -132,6 +137,7 @@ function main(source, outDir, args) {
         transform: mergedTransformFactories,
         dereference: args.dereference,
         includeEmptyDirs: args.includeEmptyDirs,
+        includeDotFiles: args.includeDotFiles,
         initialCopy: args.initial,
         preserve: args.preserve,
         update: args.update,
@@ -160,7 +166,7 @@ function main(source, outDir, args) {
             log(`Copy: ${source} --> ${outDir}`);
             log();
         }
-        const watcher = new watcher_1.Watcher(options);
+        const watcher = new Watcher(options);
         watcher.on("copy", event => {
             log(`Copied: ${event.srcPath} --> ${event.dstPath}`);
         }).on("remove", event => {
@@ -191,4 +197,3 @@ function main(source, outDir, args) {
         });
     }
 }
-exports.main = main;

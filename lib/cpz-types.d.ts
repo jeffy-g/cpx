@@ -1,3 +1,5 @@
+/// <reference path="./types-extra.d.ts" preserve="true"/>
+
 import * as minimist from "minimist";
 import { Transform } from "stream";
 import { ThroughStream as throughstream } from "through";
@@ -23,6 +25,11 @@ declare global {
         transform?: Array<((input: string, ...args: any[]) => Transform)>;
         /** The flag to not overwrite files on destination if the source file is older. Default: `false`. */
         update?: boolean;
+        /**
+         * The flag to include dotfiles in glob matches. Default: `false`.
+         * @date 2026/03/04
+         */
+        includeDotFiles?: boolean;
     }
 
     type TNormalizedCpxOption = TCpxOptions & {
@@ -35,7 +42,7 @@ declare global {
     //
     // types for test
     //
-    declare const enum ETestEntryType {
+    const enum ETestEntryType {
         CMD = 1,
         LIB = CMD << 1,
         LIB_SYNC = CMD << 2
@@ -96,4 +103,5 @@ declare global {
 
     type ThroughStream = throughstream;
 }
-export default void 0;
+
+export {};

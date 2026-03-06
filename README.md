@@ -37,8 +37,9 @@ Options:
                               <dest> directory before the first copying.
     -L, --dereference         Follow symbolic links when copying from them.
     -h, --help                Print usage information.
-    --include-empty-dirs      The flag to copy empty directories which is
+    -e, --include-empty-dirs  The flag to copy empty directories which is
                               matched with the glob.
+    -d, --dot                 Include dotfiles in glob matches.
     --no-initial              The flag to not copy at the initial time of watch.
                               Use together '--watch' option.
     -p, --preserve            The flag to copy attributes of files.
@@ -108,6 +109,7 @@ cpx.copy(source, dest, callback)
   - **options.clean** `{boolean}` -- The flag to remove files that copied on past before copy. Default: `false`.
   - **options.dereference** `{boolean}` -- The flag to follow symbolic links when copying from them. Default: `false`.
   - **options.includeEmptyDirs** `{boolean}` -- The flag to copy empty directories which is matched with the glob. Default: `false`.
+  - **options.includeDotFiles** `{boolean}` -- The flag to include dotfiles in glob matches. Default: `false`.
   - **options.initialCopy** `{boolean}` -- The flag to not copy at the initial time of watch. This is for `cpx.watch()`. Default: `true`.
   - **options.preserve** `{boolean}` -- The flag to copy uid, gid, atime, and mtime of files. Default: `false`.
   - **options.transform** `{((filepath: string) => stream.Transform)[]}` -- Functions that creates a `stream.Transform` object to transform each copying file.

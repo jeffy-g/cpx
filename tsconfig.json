@@ -7,12 +7,14 @@
         "checkJs": true,
         "strict": true,
         "removeComments": false,
-        "moduleResolution": "node",
+        "moduleResolution": "node10",
         "target": "esnext",
         "module": "commonjs",
         "sourceMap": false,
-        "baseUrl": "./",
         "outDir": "./build/",
+        "paths": {
+            "*": ["./*"]
+        },
         "diagnostics": true,
         "declaration": true
     },
