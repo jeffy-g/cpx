@@ -4,13 +4,7 @@
  * See LICENSE file in root directory for full license.
  */
 "use strict";
-//------------------------------------------------------------------------------
-// Requirements
-//------------------------------------------------------------------------------
 const through = require("through");
-//------------------------------------------------------------------------------
-// Helpers
-//------------------------------------------------------------------------------
 const postfix = process.argv[2] || "";
 /**
  * Creates a transform stream to append the specific text.
@@ -33,9 +27,6 @@ function append(_filename, args) {
         this.queue(null);
     });
 }
-//------------------------------------------------------------------------------
-// Main
-//------------------------------------------------------------------------------
 if (require.main === module) {
     process.stdin.pipe(append()).pipe(process.stdout);
 }

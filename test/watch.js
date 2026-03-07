@@ -11,9 +11,6 @@
  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 */
 "use strict";
-//------------------------------------------------------------------------------
-// Requirements
-//------------------------------------------------------------------------------
 const assert = require("assert");
 const path = require("path");
 const fs = require("fs-extra");
@@ -33,9 +30,6 @@ const execCpx = util.execCpx;
 /**
  * @typedef {import("child_process").ChildProcess} ChildProcess description
  */
-//------------------------------------------------------------------------------
-// Test
-//------------------------------------------------------------------------------
 /**
  *
  */
@@ -54,7 +48,6 @@ describe("The watch method", () => {
             // @ts-ignore maybe not null
             command.stdin.write("KILL");
             await pEvent(command, "exit");
-            //eslint-disable-next-line require-atomic-updates
             command = null;
         }
         await teardownTestDir("test-ws");
@@ -95,10 +88,8 @@ describe("The watch method", () => {
      * @returns {Promise<void>} The promise which will go fulfilled after done.
      */
     const waitForRemove = createWaiter("remove", "Removed:");
-    //==========================================================================
     /** @type {TCpxTestEntry[]} */
     const testEntries = [{
-            // #1
             testTitle: "should copy specified files with globs at first:",
             setupData: {
                 "test-ws/untouchable.txt": "untouchable",
@@ -130,7 +121,6 @@ describe("The watch method", () => {
                 }
             ]
         }, {
-            // #2
             testTitle: "should copy files in symlink directory at first when `--dereference` option was given:",
             setupData: {
                 "test-ws/src/a/hello.txt": "Symlinked",
@@ -157,7 +147,6 @@ describe("The watch method", () => {
                 }
             ]
         }, {
-            // #3
             testTitle: "should not copy files in symlink directory when `--dereference` option was not given:",
             setupData: {
                 "test-ws/src/a/hello.txt": "Symlinked",
@@ -184,7 +173,6 @@ describe("The watch method", () => {
                 }
             ]
         }, {
-            // #4
             testTitle: "should copy specified files with globs at first even if the glob starts with `./`:",
             setupData: {
                 "test-ws/untouchable.txt": "untouchable",
@@ -216,7 +204,6 @@ describe("The watch method", () => {
                 }
             ]
         }, {
-            // #5
             testTitle: "should clean and copy specified file blobs at first when give clean option:",
             setupData: {
                 "test-ws/untouchable.txt": "untouchable",
@@ -255,7 +242,6 @@ describe("The watch method", () => {
                 }
             ]
         }, {
-            // #6
             testTitle: "should not copy specified files with globs at first when `--no-initial` option was given:",
             setupData: {
                 "test-ws/untouchable.txt": "untouchable",
@@ -421,7 +407,6 @@ describe("The watch method", () => {
         },
     ];
     for (const pattern of patterns) {
-        //eslint-disable-next-line no-loop-func
         // @ts-ignore 
         (pattern.only ? describe.only : describe)(pattern.description, () => {
             beforeEach(() => setupTestDir(pattern.initialFiles));

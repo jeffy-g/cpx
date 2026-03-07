@@ -15,9 +15,6 @@ exports.main = main;
  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 */
 /* eslint-disable no-process-exit, no-process-env */
-//------------------------------------------------------------------------------
-// Requirements
-//------------------------------------------------------------------------------
 const path = require("path");
 const cp = require("child_process");
 const rslv = require("resolve");
@@ -41,9 +38,6 @@ const applyAction = aa.applyAction;
 const copyFile = cf.copyFile;
 const { Watcher } = wt;
 const importSync = require("./webpack-import");
-//------------------------------------------------------------------------------
-// Helpers
-//------------------------------------------------------------------------------
 /**
  * ```js
  * /^[./]/u;
@@ -62,9 +56,6 @@ const C_OR_COMMAND = /^(?:-c|--command)$/u;
  * ```
  */
 const T_OR_TRANSFORM = /^(?:-t|--transform)$/u;
-//------------------------------------------------------------------------------
-// Exports
-//------------------------------------------------------------------------------
 /**
  *
  * @param {string} source
@@ -72,7 +63,6 @@ const T_OR_TRANSFORM = /^(?:-t|--transform)$/u;
  * @param {TMinimistParsedArgs} args
  */
 function main(source, outDir, args) {
-    // Resolve Command.
     const commands = []
         .concat(args.command)
         .filter(Boolean)
@@ -98,7 +88,6 @@ function main(source, outDir, args) {
             return outer;
         };
     });
-    // Resolve Transforms.
     /** @type {TTransformFactory[]} */
     const transforms = [].concat(args.transform).filter(Boolean)
         .map((/** @type {TMinimistParsedArgs | string} */ arg) => {
@@ -117,8 +106,7 @@ function main(source, outDir, args) {
         const createStream = importSync(modId);
         return (file, opts) => createStream(file, Object.assign({ _flags: opts }, item.argv));
     });
-    // Merge commands and transforms as same as order of process.argv.
-    const mergedTransformFactories = process.argv
+    const transform = process.argv
         .map(part => {
         if (C_OR_COMMAND.test(part)) {
             return commands.shift();
@@ -129,12 +117,11 @@ function main(source, outDir, args) {
         return null;
     })
         .filter(Boolean);
-    // Main.
     /** @type {typeof console.log} */
     const log = args.verbose ? console.log.bind(console) : () => { };
     const options = normalizeOptions(source, outDir, {
         // @ts-ignore TODO: types
-        transform: mergedTransformFactories,
+        transform,
         dereference: args.dereference,
         includeEmptyDirs: args.includeEmptyDirs,
         includeDotFiles: args.includeDotFiles,

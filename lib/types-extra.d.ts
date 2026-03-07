@@ -1,5 +1,34 @@
 
 /**
+ * #### module definition of "minimist"
+ */
+declare module "minimist" {
+    function minimist(args: string[], opts?: minimist.Opts): minimist.ParsedArgs;
+    function minimist<T>(args: string[], opts?: minimist.Opts): T & minimist.ParsedArgs;
+    function minimist<T extends minimist.ParsedArgs>(args: string[], opts?: minimist.Opts): T;
+
+    namespace minimist {
+        interface Opts {
+            string?: string | string[] | undefined;
+            boolean?: boolean | string | string[] | undefined;
+            alias?: { [key: string]: string | string[] } | undefined;
+            default?: { [key: string]: any } | undefined;
+            stopEarly?: boolean | undefined;
+            unknown?: ((arg: string) => boolean) | undefined;
+            "--"?: boolean | undefined;
+        }
+
+        interface ParsedArgs {
+            [arg: string]: any;
+            "--"?: string[] | undefined;
+            _: string[];
+        }
+    }
+
+    export = minimist;
+}
+
+/**
  * #### module definition of "glob2base"
  */
 declare module "glob2base" {
@@ -12,7 +41,7 @@ declare module "glob2base" {
  */
 declare module "subarg" {
     import * as minimist from "minimist";
-    function subarg(args: string[], opts: minimist.Opts): ReturnType<typeof minimist>;
+    function subarg(args: string[], opts?: minimist.Opts): minimist.ParsedArgs;
     export = subarg;
 }
 /**

@@ -11,13 +11,7 @@
  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 */
 "use strict";
-//------------------------------------------------------------------------------
-// Requirements
-//------------------------------------------------------------------------------
 const Transform = require("stream").Transform;
-//------------------------------------------------------------------------------
-// Helpers
-//------------------------------------------------------------------------------
 /**
  * @typedef {typeof Transform.prototype._transform} TTransformFunction Transform.prototype._transform
  */
@@ -42,9 +36,6 @@ class Upperify extends Transform {
 function toUpperCase() {
     return new Upperify();
 }
-//------------------------------------------------------------------------------
-// Main
-//------------------------------------------------------------------------------
 if (require.main === module) {
     process.stdin.pipe(toUpperCase()).pipe(process.stdout);
 }

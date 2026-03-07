@@ -13,18 +13,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
   https://opensource.org/licenses/mit-license.php
  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 */
-//------------------------------------------------------------------------------
-// Requirements
-//------------------------------------------------------------------------------
-// @ts-ignore 
-const subarg = require("subarg");
-//------------------------------------------------------------------------------
-// Main
-//------------------------------------------------------------------------------
-// Parse arguments.
+const subarg_next_1 = require("./subarg-next");
 /** @type {Set<string>} */
 const unknowns = new Set();
-const args = subarg(process.argv.slice(2), {
+const args = (0, subarg_next_1.subarg)(process.argv.slice(2), {
     alias: {
         c: "command",
         C: "clean",

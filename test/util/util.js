@@ -4,9 +4,6 @@
  * See LICENSE file in root directory for full license.
  */
 "use strict";
-//------------------------------------------------------------------------------
-// Requirements
-//------------------------------------------------------------------------------
 const assert = require("assert");
 const cp = require("child_process");
 const exec = cp.exec;
@@ -14,9 +11,6 @@ const dirname = require("path").dirname;
 const fs = require("fs-extra");
 const execSync = cp.execSync;
 const BIN_PREFIX = fs.existsSync("./dist") ? "dist/" : fs.existsSync("./build") ? "build/" : "";
-//------------------------------------------------------------------------------
-// Public Interface
-//------------------------------------------------------------------------------
 /**
  * @param {TCpxTestEntryItem} entry
  * @returns
@@ -70,9 +64,6 @@ const readFile = (module.exports.content = async function content(path) {
         return null;
     }
 });
-// 2026/03/06 04:10:10 - node v25.6.1
-// 16ms - test 19sec
-// 50ms - test 22sec
 const WAIT = 50;
 /**
  * Sets up test files.

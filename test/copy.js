@@ -4,9 +4,6 @@
  * See LICENSE file in root directory for full license.
  */
 "use strict";
-//------------------------------------------------------------------------------
-// Requirements
-//------------------------------------------------------------------------------
 const assert = require("assert");
 const path = require("path");
 const fs = require("fs-extra");
@@ -18,11 +15,17 @@ const verifyTestDir = util.verifyTestDir;
 const execCpxSync = util.execCpxSync;
 const upperify = require("./util/upperify");
 const upperify2 = require("./util/upperify2");
-//------------------------------------------------------------------------------
-// Test
-//------------------------------------------------------------------------------
 const onAfterEach = () => teardownTestDir("test-ws");
 describe("The copy method", () => {
+    describe("should keep order when a mix of -c and -t was specified. (subarg)", () => {
+        beforeEach(() => setupTestDir({ "test-ws/a/hello.txt": "Hello" }));
+        afterEach(onAfterEach);
+        it("command version.", () => {
+            execCpxSync(
+            '"test-ws/a/**/*.txt" test-ws/b -c "node ./test/util/appendify.js a" -t [./test/util/appendify b] -c "node ./test/util/appendify.js c" -t [./test/util/appendify d]');
+            return verifyTestDir({ "test-ws/b/hello.txt": "Helloabcd" });
+        });
+    });
     describe("should copy specified files with globs:", () => {
         beforeEach(() => setupTestDir({
             "test-ws/untouchable.txt": "untouchable",
@@ -452,14 +455,6 @@ describe("The copy method", () => {
         it("command version.", () => {
             execCpxSync('"test-ws/a/**/*.txt" test-ws/b --transform ./test/util/upperify2');
             return verifyFiles();
-        });
-    });
-    describe("should keep order when a mix of -c and -t was specified.", () => {
-        beforeEach(() => setupTestDir({ "test-ws/a/hello.txt": "Hello" }));
-        afterEach(onAfterEach);
-        it("command version.", () => {
-            execCpxSync('"test-ws/a/**/*.txt" test-ws/b -c "node ./test/util/appendify.js a" -t [./test/util/appendify b] -c "node ./test/util/appendify.js c" -t [./test/util/appendify d]');
-            return verifyTestDir({ "test-ws/b/hello.txt": "Helloabcd" });
         });
     });
     describe("should copy as expected even if a specific path didn't include `/`.", () => {
